@@ -7,7 +7,7 @@ type WeatherResponse = {
 
 async function getLiveWeather(): Promise<WeatherResponse> {
   const res = await fetch(
-    "https://api.openweathermap.org/data/2.5/weather?q=Mumbai&appid=67b689a4575dbfc21068b28b8d054f47",
+    `https://api.openweathermap.org/data/2.5/weather?q=Mumbai&appid=${process.env.OPENWEATHER_API_KEY}`,
     { cache: "no-store" }
   );
   return res.json();

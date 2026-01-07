@@ -107,3 +107,29 @@ Using a single rendering strategy for all pages leads to inefficiencies and poor
 
 ---
 
+## Environment-Aware Configuration & Secrets Management
+
+This project supports multiple deployment environments:
+- Development
+- Staging
+- Production
+
+### Environment Configuration
+Each environment uses its own `.env` file:
+- `.env.development`
+- `.env.staging`
+- `.env.production`
+
+Only `.env.example` is committed to the repository to prevent
+accidental exposure of sensitive data.
+
+### Secure Secrets Management
+Sensitive values such as API keys are stored using GitHub Secrets
+and injected during build or deployment time.
+
+No secrets are hardcoded or committed to the repository.
+
+### Why Multi-Environment Setups Matter
+Using separate environments allows safer testing, prevents
+production outages, and ensures consistent behavior across CI/CD
+pipelines.
