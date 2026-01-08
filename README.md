@@ -193,3 +193,105 @@ deployment errors and improves consistency.
 
 In future deployments, adding automated testing and full CD
 pipelines would further improve reliability.
+
+---
+
+## Project Initialization & Folder Structure
+
+### Project Setup
+
+This project was initialized using **Next.js with TypeScript** to ensure type safety, scalability, and alignment with modern production standards.
+
+Command used:
+
+```bash
+npx create-next-app@latest HyderoAlert --typescript
+```
+After initialization, the application was successfully run locally and verified at:
+```bash
+http://localhost:3000
+```
+This confirmed that the project setup was correct and ready for further development.
+
+## Folder Structure Overview
+
+The project follows a clean and modular folder structure designed to support
+scalability, readability, and long-term maintainability.
+
+```txt
+src/
+├── app/          # Routes, layouts, and pages (Next.js App Router)
+├── components/   # Reusable UI components
+├── lib/          # Utilities, helpers, and configuration logic
+```
+
+## Folder Purpose & Responsibilities
+
+### `app/`
+- Contains all application routes, layouts, and pages using the **Next.js App Router**
+- Each folder inside `app/` maps directly to a route in the application
+- Handles page-level rendering logic, including Static (SSG), Dynamic (SSR), and Hybrid (ISR) rendering
+- Keeps routing and layout concerns centralized and easy to reason about
+
+### `components/`
+- Stores reusable UI components such as buttons, cards, badges, modals, and layout blocks
+- Helps keep page files clean by separating presentation logic from routing logic
+- Encourages consistency in UI design across the application
+- Makes components easy to reuse and test independently
+
+### `lib/`
+- Contains shared utilities, helper functions, and configuration files
+- Central location for non-UI logic such as API helpers, constants, formatting functions, and shared logic
+- Prevents duplication of logic across multiple pages or components
+- Improves maintainability by keeping business logic decoupled from UI
+
+---
+
+## Naming Conventions
+
+To maintain clarity and consistency across the codebase, the following naming
+conventions are followed:
+
+- **Folders:** lowercase and descriptive (`dashboard`, `districts`)
+- **Components:** PascalCase (`AlertCard.tsx`, `RiskBadge.tsx`)
+- **Utility files:** camelCase (`fetchWeather.ts`, `calculateRisk.ts`)
+- **Environment variables:** UPPERCASE with clear prefixes (`NEXT_PUBLIC_*`)
+
+These conventions improve readability and make collaboration easier in team
+environments.
+
+---
+
+## Scalability & Maintainability Benefits
+
+This folder structure supports scalability by:
+
+- Clearly separating routing, UI, and business logic responsibilities
+- Making it easier to add new features without impacting existing ones
+- Allowing developers to quickly locate relevant code
+- Aligning with industry-standard Next.js project organization practices
+
+As the project grows to include authentication, databases, cloud services,
+and CI/CD pipelines, this structure ensures the codebase remains organized
+and manageable.
+
+---
+
+## Local Development Verification
+
+The application was run locally using:
+
+```bash
+npm run dev
+```
+
+The development server started successfully, and the application was accessible at:
+
+```bash
+http://localhost:3000
+```
+
+This confirms that the project initialization and folder structure are correctly
+set up and ready for further development.
+
+---
