@@ -25,7 +25,8 @@ export default async function DistrictsPage() {
       <ul>
         {districts.map((d) => (
           <li key={d.id}>
-            {d.name} — {d.risk === "HIGH" ? "🔴" : d.risk === "MEDIUM" ? "🟡" : "🟢"}
+            {d.name} —{" "}
+            {d.risk === "HIGH" ? "🔴" : d.risk === "MEDIUM" ? "🟡" : "🟢"}
           </li>
         ))}
       </ul>
