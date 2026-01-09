@@ -445,3 +445,64 @@ This screenshot shows Prettier running across the project and confirming consist
 ![Successful Prettier run](./screenshots/precommit-success.png)
 
 ---
+
+## GitHub Workflow & Collaboration Standards
+
+This project follows a professional GitHub workflow to ensure code quality, consistency, and effective team collaboration.
+
+---
+
+### Branch Naming Convention
+
+All branches must follow this naming format:
+
+- `feature/<feature-name>` – for new features
+- `fix/<bug-name>` – for bug fixes
+- `chore/<task-name>` – for maintenance or setup tasks
+- `docs/<update-name>` – for documentation updates
+
+**Examples:**
+```
+feature/user-auth
+fix/navbar-spacing
+docs/update-readme
+```
+
+---
+
+### Pull Request Template
+
+All pull requests automatically use a standardized PR template that includes:
+- Summary of changes
+- List of updates made
+- Screenshots or evidence (if applicable)
+- A checklist for build, lint, review, and issue linkage
+
+This ensures PRs are easy to review and maintain consistent quality.
+
+---
+
+### Code Review Checklist
+
+Every pull request is reviewed using the following checklist:
+
+- Code follows naming conventions and project structure
+- Functionality verified locally
+- No console errors or warnings
+- ESLint and Prettier checks pass
+- Comments and documentation are clear and meaningful
+- No sensitive data (keys, secrets) is exposed
+
+---
+
+### Branch Protection Rules
+
+The `main` branch is protected with the following rules:
+- Pull request reviews are required before merging
+- Status checks must pass before merging
+- Direct pushes to `main` are disabled
+- Branch must be up to date before merge
+
+These rules ensure all changes are reviewed and validated before entering the main codebase.
+
+---
