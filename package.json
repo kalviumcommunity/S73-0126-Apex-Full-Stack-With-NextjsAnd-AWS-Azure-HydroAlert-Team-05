@@ -6,7 +6,14 @@
     "dev": "next dev",
     "build:development": "NEXT_PUBLIC_APP_ENV=development next build",
     "build:staging": "cross-env NEXT_PUBLIC_APP_ENV=staging next build",
-    "build:production": "cross-env NEXT_PUBLIC_APP_ENV=production next build"
+    "build:production": "cross-env NEXT_PUBLIC_APP_ENV=production next build",
+    "prepare": "husky install"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js,jsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ]
   },
   "dependencies": {
     "next": "16.1.1",
@@ -19,8 +26,13 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "cross-env": "^10.1.0",
-    "eslint": "^9",
-    "eslint-config-next": "16.1.1",
+    "eslint": "^9.39.2",
+    "eslint-config-next": "^16.1.1",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.4",
+    "husky": "^8.0.0",
+    "lint-staged": "^16.2.7",
+    "prettier": "^3.7.4",
     "tailwindcss": "^4",
     "typescript": "^5"
   }
