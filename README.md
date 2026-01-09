@@ -446,6 +446,67 @@ This screenshot shows Prettier running across the project and confirming consist
 
 ---
 
+## 🔐 Environment Variable Management
+
+This project follows best practices for managing environment variables to ensure security, scalability, and safe separation between server-side and client-side configuration.
+
+---
+
+### Environment Files
+
+The project uses the following environment files:
+
+- **`.env.local`**
+  - Stores actual credentials and sensitive values
+  - Used for local development and runtime configuration
+  - Never committed to version control
+
+- **`.env.example`**
+  - Serves as a template for all required environment variables
+  - Contains placeholder values and comments explaining usage
+  - Committed to the repository to support easy project setup
+
+---
+
+### Variable Scope & Access Rules
+
+Next.js enforces strict environment variable scoping:
+
+- **Server-side variables**
+  - Do **not** use the `NEXT_PUBLIC_` prefix
+  - Accessible only in server components, API routes, and backend logic
+  - Example:
+    ```ts
+    const dbUrl = process.env.DATABASE_URL;
+    ```
+
+- **Client-side variables**
+  - Must start with `NEXT_PUBLIC_`
+  - Safe to use inside client components
+  - Example:
+    ```ts
+    const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+    ```
+
+Server-only secrets are never referenced in client-side code.
+
+---
+
+### Secret Protection & Git Safety
+
+To prevent accidental exposure of sensitive data:
+
+- `.env.local` is excluded via `.gitignore`
+- Only `.env.example` is tracked in version control
+
+**Git ignore configuration:**
+```gitignore
+.env*
+!.env.example
+```
+
+---
+
 ## GitHub Workflow & Collaboration Standards
 
 This project follows a professional GitHub workflow to ensure code quality, consistency, and effective team collaboration.
