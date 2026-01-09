@@ -430,8 +430,18 @@ To verify the setup:
 - Enforces consistent code style across the team
 - Prevents broken or poorly formatted code from being committed
 
-## Screenshot
+## Screenshots
 
-![Successful lint commit](./screenshots/eslint_changes.png)
+The following screenshots demonstrate successful ESLint, Prettier, and pre-commit hook execution.
+
+### Successful Pre-Commit Hook & Lint-Staged Execution
+This screenshot shows a successful Git commit where Husky executed lint-staged and applied ESLint and Prettier checks before completing the commit.
+
+![Successful pre-commit hook](./screenshots/eslint_changes.png)
+
+### Successful Prettier Formatting
+This screenshot shows Prettier running across the project and confirming consistent formatting with no remaining violations.
+
+![Successful Prettier run](./screenshots/precommit-success.png)
 
 ---
