@@ -1,0 +1,72 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  role      Role     @default(USER)
+  alerts    Alert[]
+  createdAt DateTime @default(now())
+}
+
+model District {
+  id        Int              @id @default(autoincrement())
+  name      String           @unique
+  latitude  Float
+  longitude Float
+
+  readings  WeatherReading[]
+  risks     FloodRisk[]
+  alerts    Alert[]
+}
+
+model WeatherReading {
+  id          Int      @id @default(autoincrement())
+  rainfallMm  Float
+  waterLevel  Float?
+  recordedAt  DateTime @default(now())
+
+  districtId Int
+  district   District @relation(fields: [districtId], references: [id], onDelete: Cascade)
+
+  @@index([districtId, recordedAt])
+}
+
+model FloodRisk {
+  id          Int       @id @default(autoincrement())
+  level       RiskLevel
+  predictedAt DateTime  @default(now())
+
+  districtId  Int
+  district    District  @relation(fields: [districtId], references: [id], onDelete: Cascade)
+}
+
+model Alert {
+  id         Int      @id @default(autoincrement())
+  message    String
+  sentAt     DateTime @default(now())
+
+  userId     Int
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  districtId Int
+  district   District @relation(fields: [districtId], references: [id])
+}
+
+enum RiskLevel {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum Role {
+  USER
+  ADMIN
+}
