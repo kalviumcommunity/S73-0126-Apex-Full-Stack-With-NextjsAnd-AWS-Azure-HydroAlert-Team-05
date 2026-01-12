@@ -707,3 +707,55 @@ successfully created in the database.
 ![Successful Prisma Migration](./screenshots/prisma_migrations.png)
 
 ---
+
+## Prisma ORM Setup & Client Verification
+
+In this assignment, Prisma ORM was integrated into the project to establish
+a type-safe and reliable connection between the Next.js application and the
+PostgreSQL database.
+
+---
+
+### What Was Implemented
+
+- Installed and initialized **Prisma ORM** in the project
+- Defined the database schema using `schema.prisma`
+- Generated the **Prisma Client** for type-safe database access
+- Created a reusable Prisma client singleton for the application
+- Verified database connectivity by executing a real query using Prisma Client
+
+---
+
+### Prisma Client Generation
+
+The Prisma Client was successfully generated based on the defined schema,
+confirming that the models and configuration are valid.
+
+![Prisma Client Generated Successfully](./screenshots/prisma-generate.png)
+
+---
+
+### Database Connection & Query Verification
+
+A temporary server-side API route was used to execute a test query:
+
+```ts
+const users = await prisma.user.findMany();
+```
+The query executed successfully, returning results from the database and
+logging the generated SQL query, confirming that Prisma Client is properly
+connected to PostgreSQL.
+
+### Outcome
+- Prisma Client is correctly generated and initialized
+- The application can successfully communicate with the PostgreSQL database
+- Database queries execute without errors
+- The project is now ready for database-driven features such as APIs,
+authentication, and data persistence
+
+This setup forms the foundation for all future backend and database operations
+in the project.
+
+![Prisma Query Logs](./screenshots/prisma-query-logs.png)
+
+---
