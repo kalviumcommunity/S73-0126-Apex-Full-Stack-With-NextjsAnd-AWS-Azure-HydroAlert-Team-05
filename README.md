@@ -608,3 +608,102 @@ This screenshot shows the successful execution of the Docker Compose setup.
 The logs confirm that the Next.js application container was built correctly, started without errors, and is running on the exposed port.
 
 ![Successful Docker Execution](./screenshots/dockerExecution.png)
+
+---
+
+## Database Schema Design (PostgreSQL)
+
+This project uses a **normalized PostgreSQL relational schema** designed to
+support scalability, consistency, and efficient querying for flood monitoring
+and alerting.
+
+### Core Entities
+- **User** – represents residents or authorities using the system
+- **District** – flood-prone geographic regions
+- **WeatherReading** – raw meteorological data per district
+- **FloodRisk** – computed risk level for each district
+- **Alert** – notifications sent to users
+
+
+### Keys & Relationships
+- Primary keys ensure unique identification of each record
+- Foreign keys enforce referential integrity between entities
+- Cascading deletes maintain data consistency
+- Indexes optimize time-based and district-based queries
+
+
+### Normalization Notes
+- **1NF:** All fields are atomic (no repeating groups)
+- **2NF:** Non-key attributes depend fully on primary keys
+- **3NF:** No transitive dependencies; derived data stored separately
+
+This avoids redundancy and improves maintainability.
+
+### Scalability Considerations
+- Time-series data stored separately (`WeatherReading`)
+- Risk computation decoupled from raw data
+- Indexed foreign keys support fast lookups
+- Schema supports future extensions (prediction models, alerts, RBAC)
+
+### Migration & Verification
+- Database schema created using Prisma migrations
+- Tables verified using Prisma Studio
+- Seed data inserted successfully for testing
+
+### Common Queries Supported
+- Latest flood risk per district
+- Weather trends over time
+- Alerts sent to a specific user
+- High-risk districts in the last 24 hours
+
+### ER Diagram (Textual Representation)
+```sql
+User
+ ├── id (PK)
+ ├── email (UNIQUE)
+ └── role
+     |
+     | 1-to-many
+     ↓
+Alert
+ ├── id (PK)
+ ├── userId (FK)
+ ├── districtId (FK)
+ └── message
+
+District
+ ├── id (PK)
+ ├── name (UNIQUE)
+ ├── latitude
+ └── longitude
+     |
+     | 1-to-many
+     ↓
+WeatherReading
+ ├── id (PK)
+ ├── districtId (FK)
+ ├── rainfallMm
+ └── recordedAt
+
+District
+     |
+     | 1-to-many
+     ↓
+FloodRisk
+ ├── id (PK)
+ ├── level
+ └── predictedAt
+```
+
+### Successful Database Migration
+
+This screenshot shows the successful execution of the Prisma migration process.
+The logs confirm that the PostgreSQL database was reachable, the schema was
+validated correctly, and the initial migration was applied without errors.
+
+This verifies that the relational schema is valid and that all tables were
+successfully created in the database.
+
+![Successful Prisma Migration](./screenshots/prisma_migrations.png)
+
+---
