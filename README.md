@@ -567,3 +567,44 @@ The `main` branch is protected with the following rules:
 These rules ensure all changes are reviewed and validated before entering the main codebase.
 
 ---
+
+# 🐳 Dockerizing a Next.js Application
+## 📌 What I Did in This Assignment
+
+In this assignment, I containerized a Next.js application using Docker to understand how modern applications are packaged and run in a consistent environment.
+
+### I started by creating a Dockerfile where I:
+- Used an official Node.js Alpine image
+- Set a working directory inside the container
+- Installed project dependencies
+- Built the application in production mode
+- Exposed port 3000 and started the app using npm start
+- This Dockerfile defines how the application is built and executed inside a container.
+
+### 🧩 Docker Compose Setup
+
+Next, I created a docker-compose.yml file to simplify running the container.
+
+#### Using Docker Compose, I:
+- Built the image from the Dockerfile
+- Mapped port 3000 from the container to the host
+- Loaded environment variables using an .env.development file
+- This allowed me to run the entire setup using a single command.
+
+#### ▶️ Running the Application
+
+I started the container using:
+```json
+docker-compose up --build
+```
+
+After the build completed:
+- The application was accessible at http://localhost:3000
+- I verified the running container using docker ps
+
+### Successful Docker Execution
+
+This screenshot shows the successful execution of the Docker Compose setup.
+The logs confirm that the Next.js application container was built correctly, started without errors, and is running on the exposed port.
+
+![Successful Docker Execution](./screenshots/dockerExecution.png)
