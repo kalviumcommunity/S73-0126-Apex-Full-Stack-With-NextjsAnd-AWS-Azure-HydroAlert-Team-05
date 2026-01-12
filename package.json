@@ -7,6 +7,7 @@
     "build:development": "NEXT_PUBLIC_APP_ENV=development next build",
     "build:staging": "cross-env NEXT_PUBLIC_APP_ENV=staging next build",
     "build:production": "cross-env NEXT_PUBLIC_APP_ENV=production next build",
+    "start": "next start",
     "prepare": "husky install"
   },
   "lint-staged": {
