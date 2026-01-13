@@ -759,3 +759,50 @@ in the project.
 ![Prisma Query Logs](./screenshots/prisma-query-logs.png)
 
 ---
+
+## Database Migrations & Seeding (Prisma)
+
+We focuses on creating reproducible database migrations and
+seed scripts using Prisma ORM to ensure consistent database structure and
+initial data across environments.
+
+### Migrations Workflow
+- Prisma migrations are used to version and apply schema changes
+- The initial schema was migrated using:
+  ```bash
+  npx prisma migrate dev --name init_hydroalert_schema
+  ```
+- Migrations are stored inside `prisma/migrations/`
+- Schema resets and rollbacks can be performed safely using:
+  ```bash
+  npx prisma migrate reset
+  ```
+
+### Seed Script
+A seed script was added to insert consistent initial data into the database.
+- File: `prisma/seed.ts`
+- Uses idempotent operations (`upsert`) to prevent duplication
+- Inserts sample users, districts, weather readings, and flood risk data
+Seed command:
+```bash
+npx prisma db seed
+```
+
+### Verification
+- Migrations were applied successfully
+- Seed data was inserted without errors
+- Data was verified using Prisma Studio
+
+### Reflection
+Using versioned migrations ensures schema consistency across teams and
+environments. Seed scripts provide predictable starting data for development
+and testing.
+
+### Screenshots
+#### **Prisma Database Reset**
+![Prisma Database Reset](./screenshots/prisma_database_reset.png)
+
+#### **Seed Command Success**
+![Seed Command Success](./screenshots/seedCommand_success.png)
+
+---
