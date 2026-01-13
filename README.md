@@ -855,3 +855,47 @@ while indexes and optimized queries significantly improve performance as
 data grows.
 
 ---
+
+## RESTful API Design & Routing
+
+This assignment focuses on designing and organizing RESTful API routes
+using Next.js App Router and file-based routing.
+
+### API Route Hierarchy
+The backend APIs are structured by resource using predictable and
+consistent naming conventions:
+
+- `/api/users`
+- `/api/users/[id]`
+- `/api/districts`
+- `/api/alerts`
+
+Each resource supports appropriate HTTP verbs for CRUD operations.
+
+
+### HTTP Verbs & Actions
+- GET → Fetch resources
+- POST → Create new records
+- DELETE → Remove records
+
+Pagination is implemented on list endpoints using `page` and `limit`
+query parameters.
+
+### Error Handling
+Meaningful HTTP status codes are returned:
+- `400` for invalid input
+- `404` for missing resources
+- `201` for successful creation
+
+### API Testing
+Endpoints were tested using curl to verify:
+- Correct routing
+- Proper JSON responses
+- Pagination and error handling
+
+### Reflection
+Consistent route naming and predictable behavior make APIs easier to
+understand, integrate, and maintain. A well-structured API reduces bugs
+and improves team collaboration as the project grows.
+
+---
