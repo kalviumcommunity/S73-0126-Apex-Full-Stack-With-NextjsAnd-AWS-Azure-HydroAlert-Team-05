@@ -46,6 +46,9 @@ model FloodRisk {
 
   districtId  Int
   district    District  @relation(fields: [districtId], references: [id], onDelete: Cascade)
+
+  @@index([districtId])
+  @@index([districtId, predictedAt])
 }
 
 model Alert {
@@ -58,6 +61,10 @@ model Alert {
 
   districtId Int
   district   District @relation(fields: [districtId], references: [id])
+
+  @@index([userId])
+  @@index([districtId])
+  @@index([userId, sentAt])
 }
 
 enum RiskLevel {
