@@ -806,3 +806,52 @@ and testing.
 ![Seed Command Success](./screenshots/seedCommand_success.png)
 
 ---
+
+## Transactions, Indexing & Query Optimization (Prisma)
+
+This assignment focuses on maintaining data integrity using database
+transactions and improving performance through indexing and optimized
+queries.
+
+### Transaction Usage
+Transactions were implemented to ensure multiple dependent database
+operations either succeed together or fail together.
+
+**Scenario:**  
+When a flood risk is detected, a flood risk record and a user alert are
+created within a single transaction.
+
+If any operation fails, Prisma automatically rolls back the entire
+transaction.
+
+### Rollback Handling
+Transactions are wrapped in try-catch blocks to handle errors gracefully.
+Rollback behavior was verified by intentionally triggering an error and
+confirming that no partial data was written.
+
+### Indexes for Performance
+Indexes were added to frequently queried fields to improve lookup speed.
+
+```prisma
+@@index([userId])
+@@index([districtId])
+```
+
+![Addition of Indexes](./screenshots/added_indexes.png)
+
+### Query Optimization
+Queries were optimized by:
+- Selecting only required fields
+- Avoiding unnecessary relations
+- Reducing over-fetching
+
+Prisma query logs were used to compare execution before and after
+optimization.
+
+### Reflection
+
+Transactions protect data integrity when operations depend on each other,
+while indexes and optimized queries significantly improve performance as
+data grows.
+
+---
