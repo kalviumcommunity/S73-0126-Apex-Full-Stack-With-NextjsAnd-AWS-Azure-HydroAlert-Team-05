@@ -899,3 +899,76 @@ understand, integrate, and maintain. A well-structured API reduces bugs
 and improves team collaboration as the project grows.
 
 ---
+
+# Global API Response Handler
+
+We enforced a centralized API response handler to ensure
+all backend endpoints return responses in a consistent, predictable format.
+
+A unified response structure improves developer experience, simplifies
+frontend integration, and enhances observability in production systems.
+
+---
+
+### Unified Response Format
+
+All API responses follow a standard envelope:
+
+```json
+{
+  "success": true,
+  "message": "Operation completed successfully",
+  "data": {},
+  "timestamp": "2026-01-14T10:30:00Z"
+}
+```
+
+For error cases:
+
+```json
+{
+  "success": false,
+  "message": "Missing required field: name",
+  "error": {
+    "code": "E001"
+  },
+  "timestamp": "2026-01-14T10:30:00Z"
+}
+```
+
+### Global Response Utility
+A shared utility was created to handle responses across all API routes.
+- File: `lib/responseHandler.ts`
+- Provides `sendSuccess()` and `sendError()` helpers
+- Ensures consistent structure, timestamps, and HTTP status handling
+
+
+### Error Codes
+
+Common error codes are centralized to improve traceability and debugging:
+```ts
+VALIDATION_ERROR → E001  
+NOT_FOUND → E002  
+DATABASE_FAILURE → E003  
+INTERNAL_ERROR → E500
+```
+
+### Usage Across API Routes
+The response handler is used across multiple endpoints such as:
+- `/api/users`
+- `/api/alerts`
+
+This guarantees consistent success and error responses regardless of the
+resource being accessed.
+
+### Developer Experience & Observability
+A global response handler:
+- Reduces frontend conditional logic
+- Makes APIs self-documenting
+- Simplifies debugging with error codes and timestamps
+- Enables easy integration with monitoring tools like Sentry or Postman
+
+This approach ensures that every API endpoint “speaks” in the same format,
+making the backend easier to scale and maintain.
+
+---
