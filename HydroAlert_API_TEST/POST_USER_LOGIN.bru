@@ -1,0 +1,24 @@
+meta {
+  name: POST_USER_LOGIN
+  type: http
+  seq: 1
+}
+
+post {
+  url: http://localhost:3000/api/auth/signup
+  body: json
+  auth: inherit
+}
+
+body:json {
+  { 
+    "name": "jordan", 
+    "email": "jordan@gmail.com",
+    "password":"jordan123" 
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

@@ -1024,3 +1024,61 @@ secure, and predictable. Zod enables clear communication with clients and
 prevents invalid data from reaching the database.
 
 ---
+
+# Authentication APIs (bcrypt + JWT)
+
+This learning unit implements secure user authentication using bcrypt for
+password hashing and JWT for session management.
+
+### Signup Flow
+- User submits name, email, and password
+- Password is hashed using bcrypt before storage
+- Plain-text passwords are never saved
+
+### Login Flow
+- User credentials are verified using bcrypt
+- On success, a JWT token is generated
+- Token expires after 1 hour to limit risk
+
+### Protected Routes
+Private endpoints require a valid JWT in the Authorization header:
+
+```http
+Authorization: Bearer <token>
+```
+Requests without a valid token are rejected.
+
+### Security Considerations
+- Passwords are hashed using bcrypt with salt rounds
+- JWT tokens are signed and time-bound
+- Tokens can be stored in cookies or localStorage (cookies preferred in production)
+- Short-lived tokens reduce exposure risk
+
+### Example Responses
+Login Success
+```json
+{
+  "success": true,
+  "message": "Login successful",
+  "data": {
+    "token": "jwt-token"
+  }
+}
+```
+Invalid Token
+```json
+{
+  "success": false,
+  "message": "Invalid or expired token"
+}
+```
+
+
+### Reflection
+
+Secure authentication is foundational for modern applications. Using bcrypt
+and JWT ensures that user credentials remain protected and sessions are
+validated safely. Clear documentation and testing make the system reliable
+and maintainable.
+
+---
