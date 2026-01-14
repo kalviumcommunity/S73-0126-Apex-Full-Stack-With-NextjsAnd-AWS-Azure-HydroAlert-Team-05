@@ -1,0 +1,9 @@
+{
+  "version": "1",
+  "name": "HydroAlert_API_TEST",
+  "type": "collection",
+  "ignore": [
+    "node_modules",
+    ".git"
+  ]
+}

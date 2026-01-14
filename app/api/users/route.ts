@@ -1,37 +1,8 @@
-// import { NextResponse } from "next/server";
-// import { prisma } from "@/lib/prisma";
-
-// export async function GET(req: Request) {
-//   const { searchParams } = new URL(req.url);
-//   const page = Number(searchParams.get("page")) || 1;
-//   const limit = Number(searchParams.get("limit")) || 10;
-
-//   const users = await prisma.user.findMany({
-//     skip: (page - 1) * limit,
-//     take: limit,
-//     select: { id: true, name: true, email: true },
-//   });
-
-//   return NextResponse.json({ page, limit, users });
-// }
-
-// export async function POST(req: Request) {
-//   const body = await req.json();
-
-//   if (!body.email || !body.name) {
-//     return NextResponse.json(
-//       { error: "Name and email are required" },
-//       { status: 400 }
-//     );
-//   }
-
-//   const user = await prisma.user.create({ data: body });
-//   return NextResponse.json(user, { status: 201 });
-// }
-
 import { prisma } from "@/lib/prisma";
 import { sendSuccess, sendError } from "@/lib/responseHandler";
 import { ERROR_CODES } from "@/lib/errorCodes";
+import { userSchema } from "@/lib/schemas/userSchema";
+import { ZodError } from "zod";
 
 export async function GET() {
   try {
@@ -46,6 +17,41 @@ export async function GET() {
       ERROR_CODES.DATABASE_FAILURE,
       500,
       error
+    );
+  }
+}
+
+export async function POST(req: Request) {
+  try {
+    const body = await req.json();
+
+    const validatedData = userSchema.parse(body);
+
+    const user = await prisma.user.create({
+      data: validatedData,
+    });
+
+    return sendSuccess(user, "User created successfully", 201);
+  } catch (error: unknown) {
+    if (error instanceof ZodError) {
+      return sendError(
+        "Validation Error",
+        ERROR_CODES.VALIDATION_ERROR,
+        400,
+        error.issues.map((e) => ({
+          field: e.path.join("."),
+          message: e.message,
+        }))
+      );
+    }
+
+    return sendError(
+      "Internal Server Error",
+      ERROR_CODES.INTERNAL_ERROR,
+      500,
+      error instanceof Error
+        ? { message: error.message }
+        : { message: "Unknown error" }
     );
   }
 }
