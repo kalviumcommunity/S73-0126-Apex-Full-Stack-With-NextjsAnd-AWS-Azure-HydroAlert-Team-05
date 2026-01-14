@@ -972,3 +972,55 @@ This approach ensures that every API endpoint “speaks” in the same format,
 making the backend easier to scale and maintain.
 
 ---
+
+# Input Validation with Zod
+
+We introduced input validation using **Zod**, a TypeScript-first
+schema validation library, to ensure all incoming API requests contain valid
+and well-structured data.
+
+### Why Validation Matters
+Without validation, APIs may accept malformed or invalid data, leading to
+database corruption and unpredictable application behavior. Zod ensures
+invalid requests fail early and clearly.
+
+### Zod Schema Definition
+Validation schemas are defined in shared files for reuse across the backend
+and frontend.
+
+```ts
+export const userSchema = z.object({
+  name: z.string().min(2),
+  email: z.string().email(),
+});
+```
+
+### Applying Validation in API Routes
+
+Zod validation is applied in POST and PUT API handlers before any database
+operations are executed.
+
+Invalid requests return structured validation errors with clear messages and
+error codes.
+
+### Validation Examples
+
+**Successful Request**
+![Successful Request](./screenshots/ZOD-Success.png)
+
+**Failing Request:**
+![Failing Request](./screenshots/ZOD-fail.png)
+
+### Schema Reuse & Maintainability
+
+Schemas are reused across routes, ensuring consistent validation rules and
+type safety throughout the application. This approach improves maintainability
+and reduces duplication in team-based projects.
+
+### Reflection
+
+By validating inputs at the API boundary, the application becomes more robust,
+secure, and predictable. Zod enables clear communication with clients and
+prevents invalid data from reaching the database.
+
+---
