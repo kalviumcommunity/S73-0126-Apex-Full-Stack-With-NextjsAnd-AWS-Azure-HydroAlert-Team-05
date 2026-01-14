@@ -1,41 +1,10 @@
+import bcrypt from "bcrypt";
 import { prisma } from "@/lib/prisma";
 import { sendSuccess, sendError } from "@/lib/responseHandler";
 import { ERROR_CODES } from "@/lib/errorCodes";
 import { userSchema } from "@/lib/schemas/userSchema";
 import { ZodError } from "zod";
-import jwt from "jsonwebtoken";
-
-const JWT_SECRET = process.env.JWT_SECRET as string;
-
-export async function GET(req: Request) {
-  try {
-    const authHeader = req.headers.get("authorization");
-    const token = authHeader?.split(" ")[1];
-
-    if (!token) {
-      return sendError(
-        "Authorization token missing",
-        ERROR_CODES.VALIDATION_ERROR,
-        401
-      );
-    }
-
-    jwt.verify(token, JWT_SECRET);
-
-    const users = await prisma.user.findMany({
-      select: { id: true, name: true, email: true },
-    });
-
-    return sendSuccess(users, "Users fetched successfully");
-  } catch (error) {
-    return sendError(
-      "Invalid or expired token",
-      ERROR_CODES.VALIDATION_ERROR,
-      403,
-      error
-    );
-  }
-}
+import { Prisma } from "@prisma/client";
 
 export async function POST(req: Request) {
   try {
@@ -43,12 +12,23 @@ export async function POST(req: Request) {
 
     const validatedData = userSchema.parse(body);
 
+    const hashedPassword = await bcrypt.hash(validatedData.password, 10);
+
     const user = await prisma.user.create({
-      data: validatedData,
+      data: {
+        name: validatedData.name,
+        email: validatedData.email,
+        password: hashedPassword,
+      },
     });
 
-    return sendSuccess(user, "User created successfully", 201);
+    return sendSuccess(
+      { id: user.id, email: user.email },
+      "Signup successful",
+      201
+    );
   } catch (error: unknown) {
+    // ✅ Zod validation error
     if (error instanceof ZodError) {
       return sendError(
         "Validation Error",
@@ -61,8 +41,21 @@ export async function POST(req: Request) {
       );
     }
 
+    // ✅ Prisma unique constraint error (email already exists)
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2002"
+    ) {
+      return sendError(
+        "User already exists",
+        ERROR_CODES.VALIDATION_ERROR,
+        409
+      );
+    }
+
+    // ❌ True server error
     return sendError(
-      "Internal Server Error",
+      "Signup failed",
       ERROR_CODES.INTERNAL_ERROR,
       500,
       error instanceof Error
