@@ -24,3 +24,17 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Project cursor: premium droplet (hotspot centered) */
+body {
+  cursor: url('/cursor.svg') 20 20, auto;
+}
+
+/* Hide native cursor when our JS cursor is active */
+body.custom-cursor-enabled {
+  cursor: none !important;
+}
+
+/* Animated cursor style fallback */
+.animated-cursor svg { display: block; }
+.animated-cursor { will-change: transform; mix-blend-mode: normal; }

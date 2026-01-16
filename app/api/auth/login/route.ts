@@ -6,9 +6,12 @@ import { ERROR_CODES } from "@/lib/errorCodes";
 import { loginSchema } from "@/lib/schemas/loginSchema";
 import { ZodError } from "zod";
 
-const JWT_SECRET = process.env.JWT_SECRET as string;
-
 export async function POST(req: Request) {
+  const JWT_SECRET = process.env.JWT_SECRET;
+
+  if (!JWT_SECRET) {
+    throw new Error("JWT_SECRET is not defined");
+  }
   try {
     const body = await req.json();
     const { email, password } = loginSchema.parse(body);
@@ -28,7 +31,6 @@ export async function POST(req: Request) {
       JWT_SECRET,
       { expiresIn: "1h" }
     );
-
     return sendSuccess({ token }, "Login successful");
   } catch (error: unknown) {
     if (error instanceof ZodError) {

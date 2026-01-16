@@ -1082,3 +1082,51 @@ validated safely. Clear documentation and testing make the system reliable
 and maintainable.
 
 ---
+
+# Authentication Middleware (JWT-Based)
+
+We have implemented centralized authentication using **Next.js
+middleware** to protect API routes. The middleware validates JSON Web Tokens
+(JWT) before allowing requests to reach backend handlers, ensuring only
+authenticated users can access protected resources.
+
+### Why Authentication Middleware
+Placing authentication logic inside middleware ensures that security checks
+are enforced consistently across all protected routes. This avoids duplicating
+JWT validation logic inside individual API handlers and keeps business logic
+clean and focused.
+
+### Middleware-Based Authentication Flow
+1. Client sends a request to a protected API route
+2. JWT token is provided in the `Authorization` header
+3. Middleware intercepts the request before route execution
+4. Token is verified using a shared secret
+5. Requests with valid tokens proceed
+6. Requests with missing or invalid tokens are rejected
+
+### Protected Routes
+The following routes are protected using authentication middleware:
+- `/api/users`
+
+All requests to these routes must include a valid JWT token.
+
+### Error Handling
+The middleware returns meaningful HTTP responses:
+- **401 Unauthorized** → Missing token
+- **403 Forbidden** → Invalid or expired token
+
+This ensures predictable behavior for frontend clients and API consumers.
+
+### Design Considerations
+- Authentication logic is centralized at the middleware level
+- JWT verification happens before request routing
+- API handlers remain free of authentication concerns
+- The approach follows separation of concerns and clean architecture principles
+
+### Reflection
+Centralizing authentication using middleware improves maintainability,
+scalability, and security. As the application grows, additional protected
+routes can be secured without modifying individual API handlers, making the
+system robust and easy to extend.
+
+---
