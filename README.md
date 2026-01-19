@@ -1130,3 +1130,57 @@ routes can be secured without modifying individual API handlers, making the
 system robust and easy to extend.
 
 ---
+
+# Authentication State Management (useContext)
+
+We have implemented centralized authentication state management using React’s useContext API. This approach allows authentication information (such as the logged-in user and loading state) to be shared across the application without prop drilling.
+
+The authentication context works alongside server-side authentication and provides a consistent way for client components to access authentication state.
+
+### Why useContext for Authentication
+
+Managing authentication state at the component level quickly becomes unmanageable as an application grows. By using useContext, authentication state is stored in a single, centralized provider and can be accessed from any client component in the component tree.
+
+This ensures:
+- A single source of truth for authentication state
+- Cleaner component structure
+- Improved maintainability and scalability
+
+### Context-Based Authentication Flow
+1. The application is wrapped with an `AuthProvider`
+2. On initial load, the provider checks the authentication status by calling a backend endpoint
+3. If the user is authenticated, user details are stored in context state
+4. Client components access authentication state using a custom `useAuth` hook
+5. UI behavior is adjusted based on authentication state (logged in / logged out)
+
+### Auth Context Responsibilities
+
+The authentication context is responsible for:
+- Storing the authenticated user’s information
+- Tracking authentication loading state
+- Providing a consistent API for accessing auth data
+- Synchronizing client-side state with server-side authentication
+
+### Usage in Components
+
+Client components consume authentication state using a custom hook:
+- Components can determine whether a user is logged in
+- Conditional rendering is used to protect UI elements
+- Redirects can be triggered when authentication is required
+
+This enables simple and readable authentication checks within client-side components.
+
+### Design Considerations
+- Authentication state is centralized in a context provider
+- Context logic is separated from UI components
+- Client components remain declarative and focused on rendering
+- Server-side authentication remains the source of truth
+- Context is used only for state sharing, not security enforcement
+
+### Reflection
+
+Using `useContext` for authentication state management improves code clarity and reduces complexity across the application. It allows authentication status to be accessed consistently by all client components while keeping security logic on the server.
+
+This design follows React best practices and provides a scalable foundation for future features such as role-based UI rendering and global logout handling.
+
+---
