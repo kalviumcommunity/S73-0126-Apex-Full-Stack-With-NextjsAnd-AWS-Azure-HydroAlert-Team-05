@@ -1,29 +1,38 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { TextField, Button, Snackbar, Alert } from "@mui/material";
 import { useRouter } from "next/navigation";
+import { useAuth } from "../context/AuthContext";
 
 export default function LoginPage() {
   const router = useRouter();
+  const { user, loading, refresh } = useAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [loadingSubmit, setLoadingSubmit] = useState(false);
   const [msg, setMsg] = useState<null | {
     type: "success" | "error";
     text: string;
   }>(null);
 
+  /* ✅ REDIRECT WHEN AUTH CONTEXT UPDATES */
+  useEffect(() => {
+    if (!loading && user) {
+      router.replace("/dashboard");
+    }
+  }, [user, loading, router]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    setLoadingSubmit(true);
 
     try {
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        credentials: "include", // ✅ THIS IS THE FIX
+        credentials: "include",
         body: JSON.stringify({ email, password }),
       });
 
@@ -35,7 +44,7 @@ export default function LoginPage() {
       }
 
       setMsg({ type: "success", text: "Login successful" });
-
+      await refresh();
       router.replace("/dashboard");
     } catch (err) {
       setMsg({
@@ -43,7 +52,7 @@ export default function LoginPage() {
         text: (err as Error).message || "Network error",
       });
     } finally {
-      setLoading(false);
+      setLoadingSubmit(false);
     }
   };
 
@@ -74,10 +83,10 @@ export default function LoginPage() {
             <Button
               variant="contained"
               type="submit"
-              disabled={loading}
+              disabled={loadingSubmit}
               sx={{ py: 1.5 }}
             >
-              {loading ? "Signing in..." : "Sign in"}
+              {loadingSubmit ? "Signing in..." : "Sign in"}
             </Button>
           </form>
 
