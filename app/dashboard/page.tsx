@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "../context/AuthContext";
 
 /* ---------------- TYPES ---------------- */
 
@@ -19,10 +21,7 @@ type WeatherResponse = {
 };
 
 /* ---------------- FLOOD RISK FORMULA ---------------- */
-/*
-  Simple heuristic-based risk model
-  (Explainable + evaluation-friendly)
-*/
+
 function calculateFloodRisk(data: {
   humidity: number;
   windSpeed: number;
@@ -31,14 +30,8 @@ function calculateFloodRisk(data: {
   const { humidity, windSpeed, tempCelsius } = data;
 
   let score = 0;
-
-  // Saturation indicator
   score += humidity * 0.4;
-
-  // Storm intensity indicator
   score += windSpeed * 5;
-
-  // Persistent rainfall proxy
   if (tempCelsius < 25) score += 10;
 
   if (score < 40) {
@@ -69,9 +62,22 @@ function calculateFloodRisk(data: {
 /* ---------------- DASHBOARD ---------------- */
 
 export default function DashboardPage() {
+  /* ✅ ALL HOOKS FIRST */
+  const router = useRouter();
+  const { user, loading, logout } = useAuth();
   const [data, setData] = useState<WeatherResponse | null>(null);
 
+  /* ---------- REDIRECT IF NOT AUTHENTICATED ---------- */
   useEffect(() => {
+    if (!loading && !user) {
+      router.replace("/login");
+    }
+  }, [loading, user, router]);
+
+  /* ---------- FETCH WEATHER (ONLY IF USER EXISTS) ---------- */
+  useEffect(() => {
+    if (!user) return;
+
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
         const res = await fetch(
@@ -81,13 +87,22 @@ export default function DashboardPage() {
         setData(json);
       },
       async () => {
-        // fallback: Mumbai
         const res = await fetch(`/api/weather?lat=19.076&lon=72.8777`);
         const json = await res.json();
         setData(json);
       }
     );
-  }, []);
+  }, [user]);
+
+  /* ---------- SAFE RENDER STATES ---------- */
+
+  if (loading || !user) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-black text-white">
+        Verifying authentication…
+      </div>
+    );
+  }
 
   if (!data) {
     return (
@@ -99,6 +114,8 @@ export default function DashboardPage() {
     );
   }
 
+  /* ---------- DERIVED DATA ---------- */
+
   const tempCelsius = Math.round(data.main.temp - 273.15);
 
   const risk = calculateFloodRisk({
@@ -107,17 +124,31 @@ export default function DashboardPage() {
     tempCelsius,
   });
 
-  /* ---------------- UI ---------------- */
+  /* ---------------- UI (UNCHANGED) ---------------- */
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-black via-slate-900 to-black px-6 py-10 text-white">
       <div className="mx-auto max-w-6xl space-y-10">
         {/* Header */}
-        <header>
-          <h1 className="text-4xl font-extrabold tracking-tight">HydroAlert</h1>
-          <p className="text-slate-400">
-            Real-time flood early warning system using open meteorological data
-          </p>
+        <header className="flex items-center justify-between">
+          <div>
+            <h1 className="text-4xl font-extrabold tracking-tight">
+              HydroAlert
+            </h1>
+            <p className="text-slate-400">
+              Logged in as <span className="text-white">{user.email}</span>
+            </p>
+          </div>
+
+          <button
+            onClick={async () => {
+              await logout();
+              router.replace("/login");
+            }}
+            className="rounded-xl bg-red-500/80 px-4 py-2 text-sm font-medium hover:bg-red-600"
+          >
+            Logout
+          </button>
         </header>
 
         {/* FLOOD RISK HERO */}
@@ -130,30 +161,9 @@ export default function DashboardPage() {
                 : "border-green-400/20 bg-green-400/10 shadow-[0_0_60px_rgba(34,197,94,0.25)]"
           }`}
         >
-          <p
-            className={`text-sm uppercase tracking-widest ${
-              risk.color === "red"
-                ? "text-red-400"
-                : risk.color === "amber"
-                  ? "text-amber-400"
-                  : "text-green-400"
-            }`}
-          >
-            Flood Risk Level
-          </p>
+          <p className="text-sm uppercase tracking-widest">Flood Risk Level</p>
 
-          <h2
-            className={`mt-3 text-6xl font-black ${
-              risk.color === "red"
-                ? "text-red-500"
-                : risk.color === "amber"
-                  ? "text-amber-400"
-                  : "text-green-400"
-            }`}
-          >
-            {risk.level}
-          </h2>
-
+          <h2 className="mt-3 text-6xl font-black">{risk.level}</h2>
           <p className="mt-4 max-w-xl text-slate-200">{risk.message}</p>
         </section>
 
@@ -184,9 +194,6 @@ export default function DashboardPage() {
               {data.weather[0].description}
             </span>
             .
-          </p>
-          <p className="mt-2 text-sm text-slate-400">
-            Data source: OpenWeather (Live)
           </p>
         </section>
 

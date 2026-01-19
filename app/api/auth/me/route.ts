@@ -2,6 +2,8 @@ import { cookies } from "next/headers";
 import jwt from "jsonwebtoken";
 import { NextResponse } from "next/server";
 
+export const runtime = "nodejs";
+
 export async function GET() {
   const cookieStore = await cookies(); // ✅ AWAIT
   const token = cookieStore.get("hydro_token")?.value;
