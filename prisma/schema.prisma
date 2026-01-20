@@ -8,31 +8,47 @@ datasource db {
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
-  name      String
-  email     String   @unique
-  password  String
-  role      Role     @default(USER)
+  id       Int    @id @default(autoincrement())
+  name     String
+  email    String @unique
+  password String
+  role     Role   @default(USER)
+
+  // Last known location
+  lastLatitude   Float?
+  lastLongitude  Float?
+  lastDistrictId Int?
+
+  lastDistrict District? @relation("UserLastDistrict", fields: [lastDistrictId], references: [id])
+
+  // Alert state
+  lastRiskLevel   RiskLevel?
+  lastAlertSentAt DateTime?
+
   alerts    Alert[]
   createdAt DateTime @default(now())
+
+  @@index([lastDistrictId])
 }
 
 model District {
-  id        Int              @id @default(autoincrement())
-  name      String           @unique
+  id        Int    @id @default(autoincrement())
+  name      String @unique
   latitude  Float
   longitude Float
 
-  readings  WeatherReading[]
-  risks     FloodRisk[]
-  alerts    Alert[]
+  readings WeatherReading[]
+  risks    FloodRisk[]
+  alerts   Alert[]
+
+  users User[] @relation("UserLastDistrict")
 }
 
 model WeatherReading {
-  id          Int      @id @default(autoincrement())
-  rainfallMm  Float
-  waterLevel  Float?
-  recordedAt  DateTime @default(now())
+  id         Int      @id @default(autoincrement())
+  rainfallMm Float
+  waterLevel Float?
+  recordedAt DateTime @default(now())
 
   districtId Int
   district   District @relation(fields: [districtId], references: [id], onDelete: Cascade)
@@ -45,20 +61,21 @@ model FloodRisk {
   level       RiskLevel
   predictedAt DateTime  @default(now())
 
-  districtId  Int
-  district    District  @relation(fields: [districtId], references: [id], onDelete: Cascade)
+  districtId Int
+  district   District @relation(fields: [districtId], references: [id], onDelete: Cascade)
 
   @@index([districtId])
   @@index([districtId, predictedAt])
 }
 
 model Alert {
-  id         Int      @id @default(autoincrement())
-  message    String
-  sentAt     DateTime @default(now())
+  id              Int       @id @default(autoincrement())
+  message         String
+  riskLevelAtSend RiskLevel
+  sentAt          DateTime  @default(now())
 
-  userId     Int
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId Int
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   districtId Int
   district   District @relation(fields: [districtId], references: [id])
