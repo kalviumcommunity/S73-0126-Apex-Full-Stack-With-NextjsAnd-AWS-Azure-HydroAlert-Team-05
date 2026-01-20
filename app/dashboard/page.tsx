@@ -214,25 +214,46 @@ export default function DashboardPage() {
     if (!loading && !user) router.replace("/login");
   }, [loading, user, router]);
 
-  /* ---------- WEATHER FETCH ---------- */
+  /* ---------- WEATHER + LOCATION FETCH ---------- */
   useEffect(() => {
     if (!user) return;
 
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
+        const { latitude, longitude } = pos.coords;
+
+        // Weather
         const res = await fetch(
-          `/api/weather?lat=${pos.coords.latitude}&lon=${pos.coords.longitude}`
+          `/api/weather?lat=${latitude}&lon=${longitude}`
         );
         setData(await res.json());
+
+        // 🔥 Persist user location (NEW)
+        await fetch("/api/users/location", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ latitude, longitude }),
+        });
       },
       async () => {
-        const res = await fetch(`/api/weather?lat=19.076&lon=72.8777`);
+        const latitude = 19.076;
+        const longitude = 72.8777;
+
+        const res = await fetch(
+          `/api/weather?lat=${latitude}&lon=${longitude}`
+        );
         setData(await res.json());
+
+        await fetch("/api/users/location", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ latitude, longitude }),
+        });
       }
     );
   }, [user]);
 
-  /* ---------- DERIVED VALUES (ALWAYS CALLED) ---------- */
+  /* ---------- DERIVED VALUES ---------- */
 
   const tempCelsius = useMemo(() => {
     if (!data) return null;
@@ -241,7 +262,6 @@ export default function DashboardPage() {
 
   const risk = useMemo<RiskResult | null>(() => {
     if (!data || tempCelsius === null) return null;
-
     return calculateFloodRisk({
       humidity: data.main.humidity,
       windSpeed: data.wind.speed,
