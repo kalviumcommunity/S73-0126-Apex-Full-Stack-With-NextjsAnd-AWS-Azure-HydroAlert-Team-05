@@ -1,11 +1,11 @@
 "use client";
 
-import React, { useState } from "react";
-import { TextField, Button, Snackbar, Alert } from "@mui/material";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 export default function SignupPage() {
   const router = useRouter();
+
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -18,6 +18,8 @@ export default function SignupPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setMsg(null);
+
     try {
       const res = await fetch("/api/auth/signup", {
         method: "POST",
@@ -29,123 +31,106 @@ export default function SignupPage() {
 
       if (!res.ok || body?.success === false) {
         setMsg({ type: "error", text: body?.message || "Signup failed" });
-        setLoading(false);
         return;
       }
 
-      setMsg({ type: "success", text: body?.message || "Account created" });
-      setLoading(false);
+      setMsg({
+        type: "success",
+        text: body?.message || "Account created successfully",
+      });
+
       setTimeout(() => router.push("/login"), 900);
     } catch (err) {
       setMsg({
         type: "error",
         text: (err as Error).message || "Network error",
       });
+    } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="container-fluid min-vh-100 d-flex align-items-center justify-content-center p-0">
-      <div className="row w-100 mx-0" style={{ maxWidth: 1000 }}>
-        <div
-          className="col-md-6 d-none d-md-flex bg-info text-white p-5 flex-column justify-content-center"
-          style={{ borderTopLeftRadius: 12, borderBottomLeftRadius: 12 }}
-        >
-          <div>
-            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              <svg
-                width="56"
-                height="56"
-                viewBox="0 0 24 24"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  d="M12 2C12 2 7 8 7 12.5C7 16.6421 10.3579 20 14.5 20C18.6421 20 22 16.6421 22 12.5C22 7.63401 16.5 2 12 2Z"
-                  fill="#ffffff"
-                />
-              </svg>
-              <h2 style={{ margin: 0 }}>HydroAlert</h2>
-            </div>
-            <h4 className="mt-4">Join the community</h4>
-            <p className="opacity-75">
-              Create an account to receive localized water-level alerts and
-              manage notifications.
-            </p>
-          </div>
+    <main className="min-h-screen bg-gradient-to-br from-black via-slate-900 to-black flex items-center justify-center px-6 text-white">
+      <div className="w-full max-w-md rounded-3xl border border-white/10 bg-white/5 p-8 shadow-[0_0_60px_rgba(59,130,246,0.15)]">
+        {/* HEADER */}
+        <div className="mb-8 text-center">
+          <h1 className="text-3xl font-extrabold">HydroAlert</h1>
+          <p className="mt-2 text-slate-400">
+            Create an account to receive early flood warnings
+          </p>
         </div>
 
-        <div
-          className="col-12 col-md-6 bg-white p-5"
-          style={{ borderTopRightRadius: 12, borderBottomRightRadius: 12 }}
-        >
-          <h3 className="mb-3 text-dark">Create account</h3>
-          <p className="text-muted">
-            Simple, fast setup to start receiving alerts
-          </p>
-
-          <form
-            onSubmit={handleSubmit}
-            className="d-flex flex-column gap-3 mt-4"
-          >
-            <TextField
-              label="Full name"
+        {/* FORM */}
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <div>
+            <label className="text-sm text-slate-400">Full name</label>
+            <input
+              type="text"
+              required
               value={name}
               onChange={(e) => setName(e.target.value)}
-              fullWidth
-              required
+              className="mt-1 w-full rounded-xl bg-black/40 border border-white/10 px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Your name"
             />
-            <TextField
-              label="Email"
+          </div>
+
+          <div>
+            <label className="text-sm text-slate-400">Email</label>
+            <input
               type="email"
+              required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              fullWidth
-              required
+              className="mt-1 w-full rounded-xl bg-black/40 border border-white/10 px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="you@example.com"
             />
-            <TextField
-              label="Password"
+          </div>
+
+          <div>
+            <label className="text-sm text-slate-400">Password</label>
+            <input
               type="password"
+              required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              fullWidth
-              required
+              className="mt-1 w-full rounded-xl bg-black/40 border border-white/10 px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="••••••••"
             />
+          </div>
 
-            <Button
-              variant="contained"
-              color="primary"
-              type="submit"
-              disabled={loading}
-              sx={{ py: 1.5 }}
+          {msg && (
+            <div
+              className={`rounded-xl px-4 py-3 text-sm ${
+                msg.type === "error"
+                  ? "bg-red-500/10 text-red-300 border border-red-500/20"
+                  : "bg-green-500/10 text-green-300 border border-green-500/20"
+              }`}
             >
-              {loading ? "Creating..." : "Create account"}
-            </Button>
-
-            <div className="d-flex justify-content-between align-items-center">
-              <small className="text-muted">Already have an account?</small>
-              <a href="/login">Sign in</a>
+              {msg.text}
             </div>
-          </form>
+          )}
 
-          <Snackbar
-            open={Boolean(msg)}
-            autoHideDuration={4000}
-            onClose={() => setMsg(null)}
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full rounded-xl bg-blue-500 py-3 font-semibold hover:bg-blue-600 transition disabled:opacity-60"
           >
-            {msg ? (
-              <Alert
-                onClose={() => setMsg(null)}
-                severity={msg.type}
-                sx={{ width: "100%" }}
-              >
-                {msg.text}
-              </Alert>
-            ) : null}
-          </Snackbar>
-        </div>
+            {loading ? "Creating account…" : "Create account"}
+          </button>
+        </form>
+
+        {/* FOOTER */}
+        <p className="mt-6 text-center text-sm text-slate-500">
+          Already have an account?{" "}
+          <a
+            href="/login"
+            className="text-blue-400 hover:text-blue-300 font-medium"
+          >
+            Sign in
+          </a>
+        </p>
       </div>
-    </div>
+    </main>
   );
 }

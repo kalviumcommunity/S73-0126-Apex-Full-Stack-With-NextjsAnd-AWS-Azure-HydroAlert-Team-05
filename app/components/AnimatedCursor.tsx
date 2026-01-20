@@ -3,13 +3,16 @@
 import React, { useEffect, useRef } from "react";
 
 export default function AnimatedCursor() {
-  const ref = useRef<HTMLDivElement | null>(null);
-  const pos = useRef({ x: 0, y: 0 });
+  const ringRef = useRef<HTMLDivElement | null>(null);
+  const dotRef = useRef<HTMLDivElement | null>(null);
+
+  const ringPos = useRef({ x: 0, y: 0 });
   const mouse = useRef({ x: 0, y: 0 });
 
   useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
+    const ring = ringRef.current;
+    const dot = dotRef.current;
+    if (!ring || !dot) return;
 
     let initialized = false;
 
@@ -17,91 +20,95 @@ export default function AnimatedCursor() {
       mouse.current.x = e.clientX;
       mouse.current.y = e.clientY;
 
-      // Initialize position immediately on first move to avoid jump/stuck
+      // Gold dot snaps instantly
+      dot.style.transform = `translate3d(${e.clientX}px, ${e.clientY}px, 0)`;
+
       if (!initialized) {
-        pos.current.x = mouse.current.x;
-        pos.current.y = mouse.current.y;
+        ringPos.current.x = e.clientX;
+        ringPos.current.y = e.clientY;
         initialized = true;
       }
     };
 
     const loop = () => {
-      // easing follow
-      pos.current.x += (mouse.current.x - pos.current.x) * 0.18;
-      pos.current.y += (mouse.current.y - pos.current.y) * 0.18;
-      if (el) {
-        // center the cursor graphic (half of visual size)
-        el.style.transform = `translate3d(${pos.current.x - 10}px, ${pos.current.y - 10}px, 0)`;
-      }
+      ringPos.current.x += (mouse.current.x - ringPos.current.x) * 0.11;
+      ringPos.current.y += (mouse.current.y - ringPos.current.y) * 0.11;
+
+      ring.style.transform = `translate3d(${ringPos.current.x}px, ${ringPos.current.y}px, 0)`;
       requestAnimationFrame(loop);
     };
 
-    document.body.classList.add("custom-cursor-enabled");
+    document.body.classList.add("custom-cursor");
     window.addEventListener("mousemove", onMove, { passive: true });
     requestAnimationFrame(loop);
 
     return () => {
+      document.body.classList.remove("custom-cursor");
       window.removeEventListener("mousemove", onMove);
-      document.body.classList.remove("custom-cursor-enabled");
     };
   }, []);
 
   return (
-    <div
-      ref={ref}
-      className="animated-cursor"
-      style={{
-        position: "fixed",
-        left: 0,
-        top: 0,
-        width: 20,
-        height: 28,
-        pointerEvents: "none",
-        zIndex: 99999,
-        transition: "transform 0.12s linear",
-        transform: "translate3d(-9999px,-9999px,0)",
-        display: "block",
-      }}
-    >
-      <svg
-        width="20"
-        height="28"
-        viewBox="0 0 64 88"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <defs>
-          <linearGradient id="gc" x1="0%" x2="100%">
-            <stop offset="0%" stopColor="#0D6EFD" />
-            <stop offset="100%" stopColor="#0DCBF0" />
-          </linearGradient>
-        </defs>
-        <path
-          d="M32 4C20 20 8 38 8 56C8 73 22 84 32 84C42 84 56 73 56 56C56 38 44 20 32 4Z"
-          fill="url(#gc)"
-          stroke="#fff"
-          strokeWidth="1.5"
-          opacity="0.98"
-        />
-        <circle cx="26" cy="36" r="4" fill="rgba(255,255,255,0.18)" />
-      </svg>
-      <style jsx>{`
-        .animated-cursor {
-          transform-origin: center;
-          animation: pulse 1.8s infinite;
+    <>
+      {/* Precision gold dot */}
+      <div
+        ref={dotRef}
+        className="cursor-dot"
+        style={{
+          position: "fixed",
+          left: 0,
+          top: 0,
+          width: 6,
+          height: 6,
+          borderRadius: "50%",
+          background: "radial-gradient(circle at 30% 30%, #FDE68A, #F59E0B)", // champagne gold
+          pointerEvents: "none",
+          zIndex: 100000,
+          transform: "translate3d(-9999px,-9999px,0)",
+          boxShadow:
+            "0 0 8px rgba(251,191,36,0.45), inset 0 0 2px rgba(255,255,255,0.6)",
+        }}
+      />
+
+      {/* Gold glass ring */}
+      <div
+        ref={ringRef}
+        className="cursor-ring"
+        style={{
+          position: "fixed",
+          left: 0,
+          top: 0,
+          width: 38,
+          height: 38,
+          marginLeft: -19,
+          marginTop: -19,
+          borderRadius: "50%",
+          border: "1px solid rgba(251,191,36,0.45)", // amber-400
+          pointerEvents: "none",
+          zIndex: 99999,
+          transform: "translate3d(-9999px,-9999px,0)",
+          background:
+            "linear-gradient(135deg, rgba(251,191,36,0.08), rgba(255,255,255,0.02))",
+          backdropFilter: "blur(8px)",
+        }}
+      />
+
+      <style jsx global>{`
+        body.custom-cursor {
+          cursor: none;
         }
-        @keyframes pulse {
-          0% {
-            opacity: 1;
-          }
-          50% {
-            opacity: 0.92;
-          }
-          100% {
-            opacity: 1;
-          }
+
+        .cursor-ring {
+          box-shadow:
+            0 0 0 1px rgba(251, 191, 36, 0.15),
+            0 10px 40px rgba(251, 191, 36, 0.18),
+            inset 0 0 12px rgba(255, 255, 255, 0.06);
+          transition:
+            transform 0.08s linear,
+            box-shadow 0.3s ease,
+            border-color 0.3s ease;
         }
       `}</style>
-    </div>
+    </>
   );
 }

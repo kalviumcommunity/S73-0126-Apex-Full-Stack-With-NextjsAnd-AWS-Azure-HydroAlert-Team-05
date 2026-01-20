@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../context/AuthContext";
 
@@ -20,13 +20,33 @@ type WeatherResponse = {
   }[];
 };
 
+type RiskResult = {
+  level: "LOW" | "MEDIUM" | "HIGH";
+  color: "green" | "amber" | "red";
+  score: number;
+  message: string;
+};
+
+type RiskTrend = {
+  label: string;
+  icon: string;
+  color: string;
+} | null;
+
+type ImmediateAction = {
+  title: string;
+  action: string;
+  note: string;
+  className: string;
+};
+
 /* ---------------- FLOOD RISK FORMULA ---------------- */
 
 function calculateFloodRisk(data: {
   humidity: number;
   windSpeed: number;
   tempCelsius: number;
-}) {
+}): RiskResult {
   const { humidity, windSpeed, tempCelsius } = data;
 
   let score = 0;
@@ -38,6 +58,7 @@ function calculateFloodRisk(data: {
     return {
       level: "LOW",
       color: "green",
+      score,
       message: "Normal weather conditions. No immediate flood threat.",
     };
   }
@@ -46,6 +67,7 @@ function calculateFloodRisk(data: {
     return {
       level: "MEDIUM",
       color: "amber",
+      score,
       message:
         "Moderate rainfall conditions detected. Stay alert in low-lying areas.",
     };
@@ -54,27 +76,145 @@ function calculateFloodRisk(data: {
   return {
     level: "HIGH",
     color: "red",
+    score,
     message:
       "Severe weather conditions detected. Flooding possible in vulnerable zones.",
+  };
+}
+
+/* ---------------- RISK TREND LOGIC ---------------- */
+
+function computeRiskTrend(currentScore: number): RiskTrend {
+  if (typeof window === "undefined") return null;
+
+  const prev = localStorage.getItem("previousRiskScore");
+  localStorage.setItem("previousRiskScore", currentScore.toString());
+
+  if (!prev) return null;
+
+  const diff = currentScore - Number(prev);
+
+  if (diff > 5)
+    return { label: "Risk Rising", icon: "🔺", color: "text-red-400" };
+
+  if (diff < -5)
+    return { label: "Risk Falling", icon: "🔻", color: "text-green-400" };
+
+  return { label: "Risk Stable", icon: "➖", color: "text-amber-400" };
+}
+
+/* ---------------- LOCATION-SPECIFIC PREPAREDNESS ---------------- */
+
+function getPreparednessTips(
+  location: string,
+  riskLevel: "LOW" | "MEDIUM" | "HIGH"
+): string[] {
+  const loc = location.toLowerCase();
+
+  const baseTips = {
+    LOW: [
+      "Stay updated with local weather advisories",
+      "No immediate action required",
+    ],
+    MEDIUM: [
+      "Prepare emergency supplies",
+      "Avoid low-lying or waterlogged areas",
+    ],
+    HIGH: [
+      "Move valuables to higher ground",
+      "Avoid non-essential travel",
+      "Follow official evacuation advisories",
+    ],
+  };
+
+  if (
+    loc.includes("mumbai") ||
+    loc.includes("chennai") ||
+    loc.includes("kochi") ||
+    loc.includes("goa")
+  ) {
+    return [
+      ...baseTips[riskLevel],
+      "Avoid sea-facing roads and coastal zones",
+      "Secure boats and waterfront property",
+    ];
+  }
+
+  if (
+    loc.includes("delhi") ||
+    loc.includes("bengaluru") ||
+    loc.includes("pune") ||
+    loc.includes("hyderabad")
+  ) {
+    return [
+      ...baseTips[riskLevel],
+      "Avoid underpasses and flooded flyovers",
+      "Expect traffic and public transport delays",
+    ];
+  }
+
+  return [
+    ...baseTips[riskLevel],
+    "Monitor nearby rivers or canals",
+    "Keep livestock and essentials in safe areas",
+  ];
+}
+
+/* ---------------- WHAT SHOULD I DO NOW ---------------- */
+
+function getImmediateAction(
+  risk: RiskResult,
+  trend: RiskTrend
+): ImmediateAction {
+  if (risk.level === "HIGH") {
+    return {
+      title: "Act Immediately",
+      action: "Move to a safer location or higher ground",
+      note:
+        trend?.label === "Risk Rising"
+          ? "Conditions are worsening rapidly. Do not delay."
+          : "High flood risk detected. Stay alert and ready to evacuate.",
+      className:
+        "border-red-500/30 bg-red-500/10 text-red-200 shadow-[0_0_60px_rgba(255,0,0,0.25)]",
+    };
+  }
+
+  if (risk.level === "MEDIUM") {
+    return {
+      title: "Stay Prepared",
+      action: "Avoid flood-prone areas and keep essentials ready",
+      note:
+        trend?.label === "Risk Rising"
+          ? "Risk is increasing. Situation may escalate."
+          : "Conditions are stable but require attention.",
+      className:
+        "border-amber-400/30 bg-amber-400/10 text-amber-200 shadow-[0_0_40px_rgba(251,191,36,0.25)]",
+    };
+  }
+
+  return {
+    title: "No Immediate Action Needed",
+    action: "Continue monitoring weather updates",
+    note: "Weather conditions are currently safe.",
+    className:
+      "border-green-400/30 bg-green-400/10 text-green-200 shadow-[0_0_40px_rgba(34,197,94,0.25)]",
   };
 }
 
 /* ---------------- DASHBOARD ---------------- */
 
 export default function DashboardPage() {
-  /* ✅ ALL HOOKS FIRST */
   const router = useRouter();
   const { user, loading, logout } = useAuth();
+
   const [data, setData] = useState<WeatherResponse | null>(null);
 
-  /* ---------- REDIRECT IF NOT AUTHENTICATED ---------- */
+  /* ---------- AUTH GUARD ---------- */
   useEffect(() => {
-    if (!loading && !user) {
-      router.replace("/login");
-    }
+    if (!loading && !user) router.replace("/login");
   }, [loading, user, router]);
 
-  /* ---------- FETCH WEATHER (ONLY IF USER EXISTS) ---------- */
+  /* ---------- WEATHER FETCH ---------- */
   useEffect(() => {
     if (!user) return;
 
@@ -83,18 +223,38 @@ export default function DashboardPage() {
         const res = await fetch(
           `/api/weather?lat=${pos.coords.latitude}&lon=${pos.coords.longitude}`
         );
-        const json = await res.json();
-        setData(json);
+        setData(await res.json());
       },
       async () => {
         const res = await fetch(`/api/weather?lat=19.076&lon=72.8777`);
-        const json = await res.json();
-        setData(json);
+        setData(await res.json());
       }
     );
   }, [user]);
 
-  /* ---------- SAFE RENDER STATES ---------- */
+  /* ---------- DERIVED VALUES (ALWAYS CALLED) ---------- */
+
+  const tempCelsius = useMemo(() => {
+    if (!data) return null;
+    return Math.round(data.main.temp - 273.15);
+  }, [data]);
+
+  const risk = useMemo<RiskResult | null>(() => {
+    if (!data || tempCelsius === null) return null;
+
+    return calculateFloodRisk({
+      humidity: data.main.humidity,
+      windSpeed: data.wind.speed,
+      tempCelsius,
+    });
+  }, [data, tempCelsius]);
+
+  const trend = useMemo<RiskTrend>(() => {
+    if (!risk) return null;
+    return computeRiskTrend(risk.score);
+  }, [risk]);
+
+  /* ---------- EARLY RETURNS ---------- */
 
   if (loading || !user) {
     return (
@@ -104,70 +264,57 @@ export default function DashboardPage() {
     );
   }
 
-  if (!data) {
+  if (!data || !risk || tempCelsius === null) {
     return (
-      <div className="flex h-screen items-center justify-center bg-black text-white">
-        <p className="animate-pulse text-lg">
-          Initializing flood intelligence…
-        </p>
+      <div className="flex h-screen items-center justify-center bg-black text-white animate-pulse">
+        Initializing flood intelligence…
       </div>
     );
   }
 
-  /* ---------- DERIVED DATA ---------- */
+  /* ---------- UI LOGIC ---------- */
 
-  const tempCelsius = Math.round(data.main.temp - 273.15);
-
-  const risk = calculateFloodRisk({
-    humidity: data.main.humidity,
-    windSpeed: data.wind.speed,
-    tempCelsius,
-  });
-
-  /* ---------------- UI (UNCHANGED) ---------------- */
+  const preparednessTips = getPreparednessTips(data.name, risk.level);
+  const immediateAction = getImmediateAction(risk, trend);
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-black via-slate-900 to-black px-6 py-10 text-white">
       <div className="mx-auto max-w-6xl space-y-10">
-        {/* Header */}
         <header className="flex items-center justify-between">
           <div>
-            <h1 className="text-4xl font-extrabold tracking-tight">
-              HydroAlert
-            </h1>
-            <p className="text-slate-400">
-              Logged in as <span className="text-white">{user.email}</span>
-            </p>
+            <h1 className="text-4xl font-extrabold">HydroAlert</h1>
+            <p className="text-slate-400">{user.email}</p>
           </div>
-
           <button
             onClick={async () => {
               await logout();
               router.replace("/login");
             }}
-            className="rounded-xl bg-red-500/80 px-4 py-2 text-sm font-medium hover:bg-red-600"
+            className="rounded-xl bg-red-500/80 px-4 py-2 text-sm hover:bg-red-600"
           >
             Logout
           </button>
         </header>
 
-        {/* FLOOD RISK HERO */}
-        <section
-          className={`rounded-3xl border p-8 ${
-            risk.color === "red"
-              ? "border-red-500/20 bg-red-500/10 shadow-[0_0_80px_rgba(255,0,0,0.25)]"
-              : risk.color === "amber"
-                ? "border-amber-400/20 bg-amber-400/10 shadow-[0_0_60px_rgba(251,191,36,0.25)]"
-                : "border-green-400/20 bg-green-400/10 shadow-[0_0_60px_rgba(34,197,94,0.25)]"
-          }`}
-        >
-          <p className="text-sm uppercase tracking-widest">Flood Risk Level</p>
-
+        <section className="rounded-3xl border p-8 border-white/10 bg-white/5">
+          <p className="text-sm uppercase tracking-widest">Flood Risk</p>
           <h2 className="mt-3 text-6xl font-black">{risk.level}</h2>
+          {trend && (
+            <p className={`mt-2 text-sm ${trend.color}`}>
+              {trend.icon} {trend.label}
+            </p>
+          )}
           <p className="mt-4 max-w-xl text-slate-200">{risk.message}</p>
         </section>
 
-        {/* DATA GRID */}
+        <section
+          className={`rounded-3xl border p-8 ${immediateAction.className}`}
+        >
+          <h3 className="text-xl font-semibold">What should I do now?</h3>
+          <p className="mt-4 text-2xl font-bold">{immediateAction.action}</p>
+          <p className="mt-2 text-sm opacity-90">{immediateAction.note}</p>
+        </section>
+
         <section className="grid grid-cols-1 gap-6 md:grid-cols-4">
           {[
             ["📍 Location", data.name],
@@ -175,38 +322,21 @@ export default function DashboardPage() {
             ["💧 Humidity", `${data.main.humidity}%`],
             ["🌬️ Wind Speed", `${data.wind.speed} m/s`],
           ].map(([label, value]) => (
-            <div
-              key={label}
-              className="rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-md"
-            >
+            <div key={label} className="rounded-2xl bg-white/5 p-6">
               <p className="text-sm text-slate-400">{label}</p>
               <p className="mt-2 text-2xl font-semibold">{value}</p>
             </div>
           ))}
         </section>
 
-        {/* WEATHER INTELLIGENCE */}
-        <section className="rounded-3xl border border-white/10 bg-white/5 p-8 backdrop-blur-md">
-          <h3 className="text-xl font-semibold">Weather Intelligence</h3>
-          <p className="mt-3 text-slate-300">
-            Current conditions indicate{" "}
-            <span className="font-medium text-white">
-              {data.weather[0].description}
-            </span>
-            .
-          </p>
-        </section>
-
-        {/* PREPAREDNESS */}
         <section className="rounded-3xl border border-amber-400/20 bg-amber-400/10 p-8">
           <h3 className="text-xl font-semibold text-amber-300">
-            Emergency Preparedness
+            Location-Specific Preparedness
           </h3>
           <ul className="mt-4 space-y-2 text-amber-200">
-            <li>• Move valuables to higher ground</li>
-            <li>• Avoid low-lying roads and flooded areas</li>
-            <li>• Keep emergency supplies and power banks ready</li>
-            <li>• Monitor local disaster management advisories</li>
+            {preparednessTips.map((tip, idx) => (
+              <li key={idx}>• {tip}</li>
+            ))}
           </ul>
         </section>
       </div>
