@@ -1184,3 +1184,113 @@ Using `useContext` for authentication state management improves code clarity and
 This design follows React best practices and provides a scalable foundation for future features such as role-based UI rendering and global logout handling.
 
 ---
+
+# Email Alert Integration (Location-Aware Flood Notifications)
+
+We have implemented an automated **email alert system** that notifies users when flood risk becomes critical at their **last known location**. This feature ensures that users receive **timely, actionable alerts** without needing to constantly monitor the dashboard.
+
+The email alert system works alongside real-time weather analysis, location tracking, and flood risk computation to provide meaningful notifications only when necessary.
+
+### Why Email Alerts Are Required
+
+Flood situations are time-sensitive, and users may not always be actively using the application. Relying only on a dashboard view limits the effectiveness of the system.
+
+By integrating email alerts:
+- Users are notified even when offline
+- Critical warnings reach users immediately
+- The system becomes proactive rather than reactive
+
+This makes HydroAlert suitable for real-world emergency scenarios.
+
+### Alert Trigger Strategy (When Emails Are Sent)
+
+Email alerts are **not sent continuously**. Instead, alerts are triggered only when:
+
+- The flood risk level becomes **HIGH**
+- OR the flood risk **escalates** (for example, MEDIUM → HIGH)
+- AND the user has not received a recent alert (cooldown enforced)
+
+This strategy prevents spam while ensuring important warnings are delivered.
+
+### Location-Aware Alerting
+
+Each user’s **last known location** is stored when they access the dashboard. This allows the system to:
+
+1. Associate the user with a nearby district
+2. Evaluate flood risk specific to that district
+3. Send alerts based on the user’s real-world location
+
+This ensures alerts are **personalized and relevant**, even if users are in different cities.
+
+### Email Delivery Mechanism
+
+Email alerts are sent using **Nodemailer** with Gmail’s **App Password authentication**.
+
+Key characteristics:
+- No real email passwords are stored
+- Gmail App Passwords are used for secure access
+- Credentials are managed via environment variables
+
+Each email contains:
+- The user’s location
+- Current flood risk level
+- Clear guidance on what action to take
+
+### Backend Alert Flow
+
+1. User location is received by the backend
+2. Flood risk is evaluated for that location
+3. Alert eligibility is checked (risk level + cooldown)
+4. Email is sent if conditions are met
+5. Alert details are stored in the database
+
+This ensures alerts are traceable and auditable.
+
+### Alert History & Cooldown Handling
+
+Every sent alert is recorded in the database with:
+- User reference
+- District reference
+- Timestamp
+- Risk level at the time of alert
+
+A cooldown mechanism ensures:
+- Duplicate alerts are avoided
+- Users are not spammed
+- Only meaningful changes trigger notifications
+
+### Security Considerations
+
+The email alert system is designed with security in mind:
+- Alerts are triggered only for authenticated users
+- JWT-based authentication protects all related APIs
+- Email credentials are never exposed to the client
+- Server-side logic controls all alert decisions
+
+This ensures alerts cannot be abused or triggered maliciously.
+
+### Integration with Dashboard
+
+The dashboard complements the email system by:
+- Displaying current flood risk
+- Showing “What should I do now?” recommendations
+- Reflecting the same logic used for email alerts
+
+This keeps the user experience consistent across UI and notifications.
+
+### Design Considerations
+
+- Email logic is fully server-side
+- Location and risk data are persisted for reliability
+- Cooldown logic prevents unnecessary alerts
+- Notification logic is decoupled from UI rendering
+- System is extensible for SMS or push notifications
+
+
+### Reflection
+
+The email alert integration transforms HydroAlert from a passive dashboard into an **active emergency notification system**. By combining location awareness, intelligent triggering, and secure email delivery, the system ensures users receive critical information exactly when they need it.
+
+This approach follows real-world disaster alerting principles and provides a scalable foundation for future notification channels such as SMS or mobile push alerts.
+
+---
