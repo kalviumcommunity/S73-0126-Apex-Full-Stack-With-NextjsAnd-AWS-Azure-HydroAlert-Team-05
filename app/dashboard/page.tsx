@@ -3,6 +3,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../context/AuthContext";
+import dynamic from "next/dynamic";
+
+const RiskMap = dynamic(() => import("./RiskMap"), { ssr: false });
 
 /* ---------------- TYPES ---------------- */
 
@@ -208,6 +211,9 @@ export default function DashboardPage() {
   const { user, loading, logout } = useAuth();
 
   const [data, setData] = useState<WeatherResponse | null>(null);
+  const [coords, setCoords] = useState<{ lat: number; lon: number } | null>(
+    null
+  );
 
   /* ---------- AUTH GUARD ---------- */
   useEffect(() => {
@@ -221,7 +227,7 @@ export default function DashboardPage() {
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
         const { latitude, longitude } = pos.coords;
-
+        setCoords({ lat: latitude, lon: longitude });
         // Weather
         const res = await fetch(
           `/api/weather?lat=${latitude}&lon=${longitude}`
@@ -238,7 +244,7 @@ export default function DashboardPage() {
       async () => {
         const latitude = 19.076;
         const longitude = 72.8777;
-
+        setCoords({ lat: latitude, lon: longitude });
         const res = await fetch(
           `/api/weather?lat=${latitude}&lon=${longitude}`
         );
@@ -358,6 +364,21 @@ export default function DashboardPage() {
               <li key={idx}>• {tip}</li>
             ))}
           </ul>
+        </section>
+
+        <section className="space-y-3">
+          <h3 className="text-xl font-semibold">Live Risk Map</h3>
+          <p className="text-sm text-slate-400">
+            Flood risk visualization for your current location
+          </p>
+
+          {coords && (
+            <RiskMap
+              latitude={coords.lat}
+              longitude={coords.lon}
+              riskLevel={risk.level}
+            />
+          )}
         </section>
       </div>
     </main>
